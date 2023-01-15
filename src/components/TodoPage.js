@@ -52,6 +52,9 @@ export default function TodoPage({ setIndex }){
 
     function handleAddTask(e){
         e.preventDefault()
+        if (newTodo === ""){
+            return
+        }
         setTodos([...todos, {key: uuidv4(), task: newTodo}])
         setNewTodo('')
     }

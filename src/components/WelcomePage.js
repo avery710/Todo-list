@@ -11,7 +11,7 @@ const WelcomePageSection = styled.div`
 `
 
 const HeaderSection = styled.h1`
-    background-color: rgb(46, 64, 83 );
+    background-color: rgb(46, 64, 83);
     color: white;
     text-align: center;
     width: 100%;
