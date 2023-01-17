@@ -1,7 +1,9 @@
-import React, { useState } from "react"
-import { v4 as uuidv4 } from 'uuid'
+import React, { useState, useEffect, useRef } from "react"
 import styled from 'styled-components'
 import { Button, ButtonWrapper } from '../static/styles'
+import { Link } from "react-router-dom";
+import { collection, doc, addDoc, getDocs, deleteDoc } from "firebase/firestore"; 
+import { db } from '../firebase'
 
 // to do list
 const Wrapper = styled.div`
@@ -42,43 +44,97 @@ const DeleteButt = styled(Button)`
     width: 60px;
 `
 
-export default function TodoPage({ setIndex }){
+export default function TodoPage(){
     const [todos, setTodos] = useState([])
-    const [newTodo, setNewTodo] = useState('')
-    
-    function handleToggle(){
-        setIndex("welcome")
-    }
 
-    function handleAddTask(e){
-        e.preventDefault()
-        if (newTodo === ""){
-            return
+    // read data from firebase
+    useEffect(() => {
+        async function readDocs(){
+            let newData = []
+    
+            const querySnapshot = await getDocs(collection(db, "tasks"))
+            querySnapshot.forEach((doc) => {
+                newData.push({key: doc.id, task: doc.data().task})
+            })
+    
+            setTodos(newData)
         }
-        setTodos([...todos, {key: uuidv4(), task: newTodo}])
-        setNewTodo('')
-    }
+
+        readDocs()
+    }, [])
 
     return (
         <Wrapper>
-            <UpperWrapper>
-                <Input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)}/>
-                <Button onClick={handleAddTask}>新增紀錄</Button>
-            </UpperWrapper>
+            <InputField todos={todos} setTodos={setTodos} />
 
             <Todolist todos={todos} setTodos={setTodos} />
-
-            <ButtonWrapper>
-                <Button onClick={handleToggle}>返回首頁</Button>
-            </ButtonWrapper>
+            
+            <ReturnButt />
         </Wrapper>
     );
 }
 
+
+function InputField({ todos, setTodos }){
+    const [newTodo, setNewTodo] = useState("")
+    const inputRef = useRef("")
+
+    function handleAddTask(){
+        const inputValue = inputRef.current.value
+
+        if (inputValue === ""){
+            return
+        }
+
+        console.log(inputValue)
+        setNewTodo(inputValue)
+        inputRef.current.value = ""
+    }
+
+    // add data to firestore
+    useEffect(() => {
+        async function addDB(){
+            if (newTodo === ""){
+                return
+            }
+            
+            const data = {
+                task: newTodo
+            }
+    
+            const docRef = await addDoc(collection(db, "tasks"), data)
+            setTodos([...todos, {key: docRef.id, task: newTodo}])
+            console.log("Document written with ID: ", docRef.id)
+        }
+
+        addDB()
+    }, [newTodo])
+
+    return (
+        <UpperWrapper>
+            <Input type="text" ref={inputRef}/>
+            <Button onClick={handleAddTask}>新增紀錄</Button>
+        </UpperWrapper>
+    )
+}
+
+
 function Todolist({ todos, setTodos }){
+    const [deleteDocID, setDeleteDocID] = useState('')
+
+    // delete data
     function handleDelete(id){
         setTodos(todos.filter(todo => todo.key !== id))
+        setDeleteDocID(id)
     }
+
+    useEffect(() => {
+        async function deleteDB(){
+            await deleteDoc(doc(db, "tasks", deleteDocID))
+        }
+
+        deleteDB()
+    }, [todos])
 
     return (
         <ul>
@@ -91,5 +147,16 @@ function Todolist({ todos, setTodos }){
                 )
             })}
         </ul>
+    )
+}
+
+
+function ReturnButt(){
+    return (
+        <ButtonWrapper>
+            <Button>
+                <Link style={{textDecoration: "none", color: "black"}} to="/">返回首頁</Link>
+            </Button>
+        </ButtonWrapper>
     )
 }

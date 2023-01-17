@@ -1,6 +1,8 @@
 import React from "react"
 import styled from 'styled-components'
 import { Button, ButtonWrapper } from '../static/styles'
+import { Link } from "react-router-dom";
+import { db } from "../firebase"
 
 // index page
 const WelcomePageSection = styled.div`
@@ -27,12 +29,12 @@ const WelcomeSection = styled.div`
     font-size: 20px;
 `
 
-export default function WelcomePage({ setIndex }){
+export default function WelcomePage(){
     return (
         <WelcomePageSection>
             <Header />
             <Welcome />
-            <StartButton setIndex={setIndex} />
+            <PageToggleButt />
         </WelcomePageSection>
     );
 }
@@ -49,14 +51,12 @@ function Welcome(){
     )
 }
 
-function StartButton({ setIndex }){
-    function handleToggle(){
-        setIndex("todolist")
-    }
-
-    return (
+function PageToggleButt(){
+    return(
         <ButtonWrapper>
-            <Button onClick={handleToggle}>點此開始</Button>
+            <Button>
+                <Link style={{textDecoration: "none", color: "black"}} to="todo-list">點此開始</Link>
+            </Button>
         </ButtonWrapper>
     )
 }
